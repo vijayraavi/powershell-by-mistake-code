@@ -1,0 +1,25 @@
+# Test variable that cycles through each .json file.
+$jsonFiles = Get-ChildItem -path "c:\tmp\json" -filter *.json | get-content -raw
+$allobjects = $jsonFiles | convertfrom-json
+
+$alreadyCreatedGroup = Get-UnifiedGroup | select alias
+
+# Determine if list already exists in Office 365
+function checkForExistingGroup {
+    [CmdletBinding()]
+    Param(
+        [Parameter(Position=0, Mandatory=$true, ValueFromPipeline=$true)]
+        $InputObject
+    )
+
+    Process {
+            if("gr-$($InputObject.alias)" -in $alreadyCreatedGroup){
+                echo "$($inputobject.alias) exists"
+                } 
+                    else{
+                        echo "$($InputObject.alias) does not exist"
+                    }
+            }
+        }
+
+$allobjects | checkForExistingGroup

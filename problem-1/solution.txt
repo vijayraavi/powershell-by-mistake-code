@@ -1,0 +1,23 @@
+$alreadyCreatedGroup = Get-UnifiedGroup | select -Expand alias
+
+# Determine if list already exists in Office 365
+function Test-ForExistingGroup {
+    [CmdletBinding()]
+    Param(
+        [Parameter(Position=0, Mandatory=$true, ValueFromPipeline=$true)]
+        $InputObject,
+
+        [Parameter(Position=0, Mandatory=$true)]
+        $ExistingGroups
+    )
+
+    Process {
+            if("gr-$($InputObject.alias)" -in $ExistingGroups) {
+                Write-Verbose "$($inputobject.alias) exists"  
+            } else{
+                Write-Verbose "$($InputObject.alias) does not exist"
+            }
+    }
+}
+
+$allobjects | Test-ForExistingGroup -Verbose -Existing $alreadyCreatedGroup
