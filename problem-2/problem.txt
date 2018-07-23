@@ -1,0 +1,4 @@
+$Password = ConvertTo-SecureString "abcd" -AsPlainText -Force
+$Credentials = New-Object System.Management.Automation.PSCredential ("domainname\aduser", $Password )
+$sql1 = New-PSSession -ComputerName sql1 -Credential $Credentials
+Import-PSSession -Session sql1 -Module SQLPS -Prefix sql1 -AllowClobber
