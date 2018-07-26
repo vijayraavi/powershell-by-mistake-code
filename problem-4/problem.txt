@@ -1,0 +1,43 @@
+   
+Import-Module ActiveDirectory 
+
+$Smtpserver = "smtpmail.domain.com"
+$From = "noreply@domain.com"
+$To = "user@domain.com"
+$Subject = "Delete Stale Computers Failed"
+$Body = "The Delete Stale computers script failed due to error '$($errormessage)'.   One of the OU's listed maybe missing in Active Directory.  Please review the list of OU's and check if they are still present in Active Directory" 
+
+$date = [DateTime]::Today.AddDays(-180)
+
+$ous = @(
+       'OU=Name,DC=domain,DC=com';
+       'OU=Laptop,OU=Computers,OU=City,OU=Production,DC=domain,DC=com';
+       'OU=Windows 8,OU=Workstations,DC=domain,DC=com';
+       'OU=Windows 8 Prod,OU=Workstations,DC=domain,DC=com';
+       'OU=Linux,OU=Workstations,DC=domain,DC=com';
+       'OU=Windows 8,OU=Workstations,DC=domain,DC=com';
+       )
+
+
+    try {
+        $results = $ous | 
+        ForEach-Object { Get-AdComputer -Properties LastLogonDate -Filter {LastLogonDate -le $date} -Searchbase $_ } | 
+        Where-Object {$_.SamAccountName -cnotmatch "D-"} 
+    }
+
+    catch [Microsoft.ActiveDirectory.Management.ADIdentityNotFoundException] {          
+    }
+
+    finally {
+        
+        if ($error[0].exception.message.Contains("Directory object not found")) {
+            $errormessage = $error[0].exception.message.ToLower()
+            Send-MailMessage -SmtpServer $Smtpserver -From $From -To $To -Subject $Subject -BodyAsHtml $Body
+            $error.Clear()                   
+        }
+
+            else {
+                $results | Remove-ADComputer -Confirm:$false          
+            }
+    }
+ 
