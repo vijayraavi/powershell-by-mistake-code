@@ -1,0 +1,18 @@
+Function Get-NetAdapterInfo {
+ [CmdletBinding()]
+ Param(
+  [Parameter(Mandatory=$True)]
+  [string]$SearchBase
+ )
+ 
+ Get-ADComputer -Filter * -SearchBase $SearchBase |
+ Select -Expand Name |
+ ForEach-Object {
+  $session = New-CimSession -ComputerName $_
+  Get-NetAdapter -CimSession $session | 
+  Select-Object PsComputerName, InterfaceAlias, Status, MacAddress
+ }
+
+}
+
+Get-NetAdapterInfo -searchbase "ou=whatever,dc=domain,dc=com" | Export-CSV Whatever.csv
